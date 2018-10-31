@@ -467,8 +467,10 @@ define( 'AID_LEADER_API_KEY', 'my-random-api-key');</pre>";
 }
 
 function aid_leader_sync_midata() {
-	$db      = new Scout_DB();
-	$people  = $db->getGroups();
+	// TODO provide url from configuration
+	$db      = new Scout_DB("http://hitobito:3000");
+	$db->login(AID_LEADER_API_USER, AID_LEADER_API_KEY);
+	$people  = $db->getGroups("2");
 	$updated = array();
 	$created = array();
 
