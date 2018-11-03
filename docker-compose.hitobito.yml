@@ -1,0 +1,29 @@
+version: '3.1'
+
+services:
+
+  wordpress:
+    build: .
+    restart: always
+    ports:
+      - 8080:80
+    environment:
+      WORDPRESS_DB_PASSWORD: example
+
+  mysql:
+    image: mysql:5.7
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: example
+
+  adminer:
+    image: adminer
+    ports:
+      - 8081:8080
+
+  hitobito:
+    image: hitobito
+    restart: always
+    ports:
+      - 3000:3000
+      - 8082:1080
