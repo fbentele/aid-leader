@@ -35,20 +35,21 @@
  * macki@dracheburg.ch
  */
 class Scout_DB {
-	private $user = AID_LEADER_API_USER; // configure api user in wp-config.php
-	private $password = AID_LEADER_API_KEY; // configure api key in wp-config.php
-	private $urlBase = "https://db.scout.ch";
-	private $groups2get = "166"; // Gruppen ID KV-SGARAI
+	private $user;
+	private $authToken;
+	private $urlBase;
 	private $arrLabels = array( "Spezialfunktion", "Fonction spéciale", "funzione speciale" );
 
-	function __construct() {
+	function __construct($urlBase) {
 		$this->arrLabels = explode( ",", utf8_encode( implode( ",", $this->arrLabels ) ) );
+		$this->urlBase = $urlBase;
 	}
 
 	function login( $user, $password ) {
+		$this->user = $user;
 		$url  = $this->urlBase . "/users/sign_in";
 		$ch   = curl_init();
-		$data = array( "person[email]" => $user, "person[password]" => $password );
+		$data = array( "person[email]" => $this->user, "person[password]" => $password );
 		curl_setopt( $ch, CURLOPT_URL, $url );
 		curl_setopt( $ch, CURLOPT_POST, 1 );
 		curl_setopt( $ch, CURLOPT_POSTFIELDS, $data );
@@ -62,14 +63,11 @@ class Scout_DB {
 			echo $result;
 			die();
 		} else {
-			$authToken = $decoded["people"][0]["authentication_token"];
-
-			return $authToken;
+			$this->authToken = $decoded["people"][0]["authentication_token"];
 		}
 	}
 
 	function qry( $qry ) {
-		$authToken = $this->login( $this->user, $this->password );
 		$url       = $this->urlBase . "/groups" . $qry . ".json";
 		$ch        = curl_init();
 		curl_setopt( $ch, CURLOPT_URL, $url );
@@ -77,7 +75,7 @@ class Scout_DB {
 		curl_setopt( $ch, CURLOPT_HTTPHEADER, array(
 			'Content-Type: application/json',
 			'X-User-Email: ' . $this->user,
-			'X-User-Token: ' . $authToken,
+			'X-User-Token: ' . $this->authToken,
 			'Accept: application/json'
 		) );
 		$result = curl_exec( $ch );
@@ -87,10 +85,10 @@ class Scout_DB {
 		return $decoded;
 	}
 
-	function getGroups() {
+	function getGroups($groups2get) {
 		$data    = array();
 		$people  = array();
-		$groupId = explode( ",", $this->groups2get );
+		$groupId = explode( ",", $groups2get );
 		foreach ( $groupId as $id ) {
 			$qry  = "/" . $id . "/people";
 			$data = $this->qry( $qry );
